@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import MenuEditor from './MenuEditor';
 import MenuPreview from './MenuPreview';
+import MenuTypeModal from './MenuTypeModal';
 
 export default function MenuBuilder() {
   const [templates, setTemplates] = useState([]);
   const [menus, setMenus] = useState([]);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showTypeModal, setShowTypeModal] = useState(false);
 
   useEffect(() => {
     loadTemplates();
@@ -37,12 +39,12 @@ export default function MenuBuilder() {
     }
   }
 
-  async function handleCreateMenu() {
+  async function handleCreateMenu(template) {
     const { data, error } = await supabase
       .from('menus')
       .insert([{
         name: 'New Menu',
-        template_id: templates[0]?.id,
+        template_id: template.id,
         description: '',
         background_color: '#FFFFFF',
         text_color: '#000000',
@@ -54,6 +56,7 @@ export default function MenuBuilder() {
     if (!error && data) {
       setMenus([data, ...menus]);
       setSelectedMenu(data);
+      setShowTypeModal(false);
     }
   }
 
@@ -82,10 +85,18 @@ export default function MenuBuilder() {
 
   return (
     <div className="menu-builder">
+      {showTypeModal && (
+        <MenuTypeModal
+          templates={templates}
+          onSelect={handleCreateMenu}
+          onClose={() => setShowTypeModal(false)}
+        />
+      )}
+
       <div className="sidebar">
         <div className="sidebar-header">
           <h2>Your Menus</h2>
-          <button onClick={handleCreateMenu} className="btn-primary">
+          <button onClick={() => setShowTypeModal(true)} className="btn-primary">
             + New Menu
           </button>
         </div>
